@@ -14,18 +14,23 @@ dependencies {
 }
 
 tasks {
-
+    val runtimeCp = configurations.runtimeClasspath.get()
+    val libsDestFolder = buildDir.resolve("libs/libs")
     task<Copy>("downloadDependencies") {
-        from(configurations.runtimeClasspath)
-        into("libs")
+        from(runtimeCp)
+        into(libsDestFolder)
     }
 
     clean {
-        doFirst { delete("libs") }
+        doFirst { delete(libsDestFolder) }
     }
 
-    jar {
+    getByName<Jar>("jar") {
         dependsOn("downloadDependencies")
+        manifest {
+            attributes["Main-Class"] = "com.github.aesteve.gradle.docker.Main"
+            attributes["Class-Path"] = runtimeCp.files.joinToString(separator = " ", transform = { "libs/${it.name}"})
+        }
     }
 
 }
